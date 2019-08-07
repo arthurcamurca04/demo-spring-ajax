@@ -10,7 +10,7 @@ public class HomeController {
 	@GetMapping("/")
 	public ModelAndView home() {
 		ModelAndView mv = new ModelAndView();
-		mv.setViewName("promo-add");
+		mv.setViewName("redirect:/promocao/add");
 		return mv;
 		
 	}
