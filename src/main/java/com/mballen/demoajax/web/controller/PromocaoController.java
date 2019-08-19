@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,10 +24,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+
+import com.mballen.demoajax.web.dto.PromocaoDTO;
 import com.mballen.demoajax.web.model.Categoria;
 import com.mballen.demoajax.web.model.Promocao;
 import com.mballen.demoajax.web.repositories.CategoriaRepository;
 import com.mballen.demoajax.web.repositories.PromocaoRepository;
+import com.mballen.demoajax.web.service.PromocaoDataTablesService;
 
 @Controller
 @RequestMapping("/promocao")
@@ -113,6 +118,68 @@ public class PromocaoController {
 		PageRequest pageRequest = PageRequest.of(0, 8, sort);
 		model.addAttribute("promocoes", promocaoRepository.findBySite(site, pageRequest));
 		return "promo-card";
-		
 	}
+	
+	//dataTables
+	@GetMapping("/tabela")
+	public String showTabela() {
+		return "promo-datatables";
+	}
+	
+	@GetMapping("/datatables/server")
+	public ResponseEntity<?> dataTables(HttpServletRequest request) {
+		Map<String, Object> data = new PromocaoDataTablesService().execute(promocaoRepository, request);
+		return ResponseEntity.ok(data);
+	}
+	
+	@GetMapping("/delete/{id}")
+	public ResponseEntity<?> excluirPromo(@PathVariable("id") Long id) {
+		promocaoRepository.deleteById(id);		
+		return ResponseEntity.ok().build();
+	}
+	
+	@GetMapping("/edit/{id}")
+	public ResponseEntity<?> preEditarPromo(@PathVariable("id") Long id) {
+		Promocao promo = promocaoRepository.findById(id).get();		
+		return ResponseEntity.ok(promo);
+	}
+	
+	@PostMapping("/edit")
+	public ResponseEntity<?> editarPromo(@Valid PromocaoDTO dto, BindingResult result) {
+		if (result.hasErrors()) {
+			Map<String, String> errors = new HashMap<>();
+			for(FieldError error : result.getFieldErrors()) {
+				errors.put(error.getField(), error.getDefaultMessage());
+			}
+			return ResponseEntity.unprocessableEntity().body(errors);
+		}
+		
+		Promocao promo = promocaoRepository.findById(dto.getId()).get();
+		promo.setCategoria(dto.getCategoria());
+		promo.setDescricao(dto.getDescricao());
+		promo.setLinkImagem(dto.getLinkImagem());
+		promo.setPreco(dto.getPreco());
+		promo.setTitulo(dto.getTitulo());
+		
+		promocaoRepository.save(promo);
+		
+		return ResponseEntity.ok().build();
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 }
