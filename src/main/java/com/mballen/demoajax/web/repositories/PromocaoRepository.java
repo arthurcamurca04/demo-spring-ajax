@@ -1,7 +1,9 @@
 package com.mballen.demoajax.web.repositories;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,6 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 import com.mballen.demoajax.web.model.Promocao;
 
 public interface PromocaoRepository extends JpaRepository<Promocao, Long>{
+	
+	@Query("SELECT COUNT(p.id) as count, max(p.dtCadastro) as lastDate from Promocao p WHERE p.dtCadastro > :data")
+	Map<String, Object> totalAndUltimaPromocaoByCadastro(@Param("data") LocalDateTime data);
+	
+	@Query("SELECT p.dtCadastro FROM Promocao p")
+	Page<LocalDateTime> findUltimaDataDePromocao(Pageable pageable);
 	
 	@Query("SELECT p.likes FROM Promocao p WHERE p.id = :id")
 	int findLikesById(@Param("id") Long id);
